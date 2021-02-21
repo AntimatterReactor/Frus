@@ -1,0 +1,4 @@
+PRINT ("HELLO WORLD")
+IF ((2 + 2) == 4) {
+PRINT ("2+2 IS 4")
+}
