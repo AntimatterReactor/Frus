@@ -79,19 +79,63 @@ int main(int argc, char **argv)
 	}
 
 	fp = fopen(argv[1], "r");
-
-	fseek(fp, 0L, SEEK_END);
-	len = ftell(fp);
-	fseek(fp, 0L, SEEK_SET);
-
-	buffer = (char*) calloc(len, sizeof(char));
-
-	fread(buffer, 1, len, fp);
-
-	if(interpreter(buffer, len))
+	if (fp == NULL)
 	{
+		fprintf(stderr,
+			"Error: Unable to open file\n"
+			"| Tip: Check if the file actually exists\n");
 		return EXIT_FAILURE;
 	}
+
+	if (fseek(fp, 0L, SEEK_END))
+	{
+		fprintf(stderr,
+			"Error: Unable to seek to the end of file\n"
+			"| No fix are available\n"
+			"| Please open an issue on github\n");
+		return EXIT_FAILURE;
+	}
+
+	len = ftell(fp);
+	if (len == -1L)
+	{
+		fprintf(stderr,
+			"Error: Unable to tell the length of the file\n"
+			"| No fix are available\n"
+			"| Please open an issue on github\n");
+		return EXIT_FAILURE;
+	}
+	if (fseek(fp, 0L, SEEK_SET))
+	{
+		fprintf(stderr,
+			"Error: Unable to seek back to the start of the file\n"
+			"| No fix are available\n"
+			"| Please open an issue on github\n");
+		return EXIT_FAILURE;
+	}
+
+	buffer = (char*) calloc(len, sizeof(char));
+	if (buffer == NULL)
+	{
+		fprintf(stderr,
+			"Error: Unable to allocate string buffer of size %ld\n"
+			"| Tip: Check if you have enough memory\n"
+			"| Please open an issue on github\n",
+			len);
+		return EXIT_FAILURE;
+	}
+
+	fread(buffer, sizeof(char), len, fp);
+	if (ferror(fp))
+	{
+		fprintf(stderr,
+			"Error: Unable read the file\n"
+			"| Tip: Check if the file is corrupted\n"
+			"| Please open an issue on github\n");
+		return EXIT_FAILURE;
+	}
+
+	if(interpreter(buffer, len)) return EXIT_FAILURE;
 
 	free(buffer);
 	return EXIT_SUCCESS;
