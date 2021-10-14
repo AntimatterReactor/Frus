@@ -1,24 +1,17 @@
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 
-int errset = 0;
-void err(const char *msg)
+int interpreter(char *rawIn, long inLen)
 {
-	fputs(msg, stderr);
-	errset = 1;
-}
+	long	lstack[600]	= {0};
+	char	pstack[30000]	= {0};
+	char	*stkit		= pstack;
+	char	skip		= 0;
+	long	lindex		= 0;
+	long	br_index	= 0;
+	long	i;
 
-void interpreter(char *rawIn, long inLen)
-{
-	uint8_t  lstack[UINT8_MAX]	= {0};
-	char	 pstack[30000]		= {0};
-	char	 *stkit			= pstack;
-	int8_t	 skip			= 0;
-	uint8_t	 lindex			= 0;
-	uint8_t	 br_index		= 0;
-
-	for (size_t i = 0; i < inLen; i++)
+	for (i = 0; i < inLen; i++)
 	{
 		if (skip > 0)
 		{
@@ -37,19 +30,33 @@ void interpreter(char *rawIn, long inLen)
 
 			case '[':
 				if	(*stkit != 0) lstack[++lindex] = i;
-				else if	(*stkit == 0) skip += 1;
+				else if	(*stkit == 0)
+				{
+					skip += 1;
+					br_index = i;
+				}
 				break;
 
 			case ']':
 				if (*stkit != 0) i = lstack[lindex--] - 1;
 				else lstack[lindex--] = 0;
+				if (lindex < 0)
+				{
+					fprintf(stderr, "Error: Unmatched ']' at index: %ld\n", i);
+					return 1;
+				}
 				break;
 
 			case '.': putchar(*stkit); break;
 			case ',': *stkit = getchar(); break;
 		}
 	}
-	if (skip == 1 || lindex > 0) err("\n\nError: Unmatched '['");
+	if (skip == 1 || lindex > 0)
+	{
+		fprintf(stderr, "Error: Unmatched '[' at index: %ld\n", br_index);
+		return 1;
+	}
+	return 0;
 }
 
 int main(int argc, char **argv)
@@ -58,10 +65,18 @@ int main(int argc, char **argv)
 	FILE *fp;
 	long len;
 
-	if (argc < 2) err("Not enough args, need file name");
-	else if (argc > 2) err("Too much args");
-
-	if (errset) return 1;
+	if (argc < 2)
+	{
+		fprintf(stderr,
+		"Error: Not enough arguments\n| Usage: <filename>\n");
+		return EXIT_FAILURE;
+	}
+	else if (argc > 2)
+	{
+		fprintf(stderr,
+		"Error: Too much arguments\n| Usage: <filename>\n");
+		return EXIT_FAILURE;
+	}
 
 	fp = fopen(argv[1], "r");
 
@@ -73,11 +88,11 @@ int main(int argc, char **argv)
 
 	fread(buffer, 1, len, fp);
 
-	interpreter(buffer, len);
-
-	if (errset) return 1;
+	if(interpreter(buffer, len))
+	{
+		return EXIT_FAILURE;
+	}
 
 	free(buffer);
-
-	return 0;
+	return EXIT_SUCCESS;
 }
