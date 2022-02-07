@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 	THROW_IF(buf == NULL, "Err: Not enough memory to allocate buffer\n");
 
 	fread(buf, sizeof(char), len, fp);
-	THROW_IF(ferror(fp), "Error: Unable read the file\n");
+	THROW_IF(ferror(fp), "Err: Unable read the file\n");
 
 	for (i = 0; i < len; i++) {
 		if (skip > 0) {
