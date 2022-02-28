@@ -9,6 +9,6 @@ frus: frus.c
 clean:
 	rm -f *~ frus *.o*
 
-optimize: frus clean
+optimize: frus
 	$(STRIPPER) $<
 	$(COMPRESSOR) $<

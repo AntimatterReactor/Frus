@@ -20,4 +20,4 @@ It's also designed to use the minimum amount of space.
 Target a brainfuck using the compiled `frus.c` binary.
 E.g `./frus source.bf`
 
-NOTE: frus DOES NOT support debugging
+NOTE: frus DOES NOT support bf code debugging
